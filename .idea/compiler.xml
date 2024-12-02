@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="todo_list_sb.todo_list_sb.main~1" target="21" />
+      <module name="todo_list_sb.todo_list_sb.test~1" target="21" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
