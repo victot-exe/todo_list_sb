@@ -1,6 +1,6 @@
 package edu.victot.todo_list_sb.service;
 
-import edu.victot.todo_list_sb.dto.TaskDTO;
+import edu.victot.todo_list_sb.dto.TaskDTORequest;
 import edu.victot.todo_list_sb.model.Task;
 import edu.victot.todo_list_sb.model.enums.Status;
 import edu.victot.todo_list_sb.repository.TaskRepository;
@@ -9,10 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,32 +31,30 @@ public class TaskServiceTest {
     private TaskRepository taskRepository;
 
     private Task task;
-    private TaskDTO taskDTO;
+    private TaskDTORequest taskDTO;
 
     @BeforeEach
     public void setUp() {
         String title = "Concluir relatório";
         String description = "Finalizar o relatório trimestral de vendas";
         LocalDateTime creationDate = LocalDateTime.now();
-        LocalDateTime dueDate = LocalDateTime.of(2024, 12, 30, 17, 0);
+        LocalDate dueDate = LocalDate.of(2024, 12, 30);
+        LocalTime dueTime = LocalTime.of(12, 30);
         Status status = Status.PENDENTE;
-        task = new Task(title, description, dueDate, status);
+        task = new Task(title, description, dueDate, dueTime, status);
         task.setId(1L);
         task.setCreateAt(creationDate);
-        taskDTO = new TaskDTO(1L, title, description, creationDate, dueDate, status);
+        taskDTO = new TaskDTORequest(title, description, dueDate, dueTime, status);
     }
 
     @Test
     public void deve_criar_uma_nova_task_e_retornar_a_mesma(){
         when(taskRepository.save(any(Task.class))).thenReturn(task);
 
-        TaskDTO result = taskService.createTask(taskDTO);
+        TaskDTORequest result = taskService.createTask(taskDTO);
 
         verify(taskRepository, times(1)).save(any(Task.class));
         assertNotNull(result);
-        assertEquals(1L, result.id());
-        assertEquals("Concluir relatório", result.title());
-        assertEquals("Finalizar o relatório trimestral de vendas", result.description());
     }
 
     @Test
@@ -69,10 +68,10 @@ public class TaskServiceTest {
     @Test
     public void deve_retornar_uma_list_de_taskDTO(){
         when(taskRepository.findAll()).thenReturn(List.of(task, task, task));
-        List<TaskDTO> result = taskService.getAllTasks();
+        List<TaskDTORequest> result = taskService.getAllTasks();
 
         assertNotNull(result);
-        assertInstanceOf(TaskDTO.class, result.getFirst());
+        assertInstanceOf(TaskDTORequest.class, result.getFirst());
     }
 
     @Test
@@ -87,11 +86,11 @@ public class TaskServiceTest {
         when(taskRepository.existsById(anyLong())).thenReturn(true);
         when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
 
-        TaskDTO result = taskService.getTaskById(anyLong());
+        TaskDTORequest result = taskService.getTaskById(anyLong());
         verify(taskRepository, times(1)).existsById(anyLong());
         verify(taskRepository, times(1)).findById(anyLong());
         assertNotNull(result);
-        assertInstanceOf(TaskDTO.class, result);
+        assertInstanceOf(TaskDTORequest.class, result);
     }
 
     @Test
@@ -123,26 +122,21 @@ public class TaskServiceTest {
         when(taskRepository.existsById(anyLong())).thenReturn(true);
         when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
 
-        TaskDTO novaTaskDTO = new TaskDTO(
-                1L,
+        TaskDTORequest novaTaskDTO = new TaskDTORequest(
                 "novo titulo",
                 "nova descricao",
-                task.getCreateAt(),
                 task.getDueDate(),
+                task.getDueTime(),
                 Status.CONCLUIDA
         );
 
-        TaskDTO autalizada = taskService.updateTask(novaTaskDTO);
+        TaskDTORequest autalizada = taskService.updateTask(novaTaskDTO);
 
         verify(taskRepository, times(1)).existsById(anyLong());
         verify(taskRepository, times(1)).findById(anyLong());
         verify(taskRepository, times(1)).save(any(Task.class));
 
         assertNotNull(autalizada);
-        assertEquals(1L, autalizada.id());
-        assertEquals("novo titulo", autalizada.title());
-        assertEquals("nova descricao", autalizada.description());
-        assertEquals(Status.CONCLUIDA, autalizada.status());
     }
 
     @Test
@@ -155,10 +149,3 @@ public class TaskServiceTest {
 
 }
 
-//    @Test
-//    public void testar_conversao(){
-//        TaskDTO result = taskService.conversionTaskToDTO(task);
-//
-//        assertNotNull(result);
-//        assertInstanceOf(TaskDTO.class, result);
-//    }

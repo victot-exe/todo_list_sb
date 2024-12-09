@@ -3,7 +3,10 @@ package edu.victot.todo_list_sb.model;
 import edu.victot.todo_list_sb.model.enums.Status;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 public class Task {
@@ -16,16 +19,18 @@ public class Task {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createAt;
-    private LocalDateTime dueDate;
+    private LocalDate dueDate;
+    private LocalTime dueTime;
     private Status status;
 
     public Task() {}
 
-    public Task(String title, String description, LocalDateTime dueDate, Status status) {
+    public Task(String title, String description, LocalDate dueDate, LocalTime dueTime, Status status) {
         super();
         this.title = title;
         this.description = description;
         this.dueDate = dueDate;
+        this.dueTime = dueTime;
         this.status = status;
     }
 
@@ -61,12 +66,20 @@ public class Task {
         this.createAt = createAt;
     }
 
-    public LocalDateTime getDueDate() {
+    public LocalDate getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(LocalDateTime dueDate) {
+    public void setDueDate(LocalDate dueDate) {
         this.dueDate = dueDate;
+    }
+
+    public LocalTime getDueTime() {
+        return dueTime;
+    }
+
+    public void setDueTime(LocalTime dueTime) {
+        this.dueTime = dueTime;
     }
 
     public Status getStatus() {

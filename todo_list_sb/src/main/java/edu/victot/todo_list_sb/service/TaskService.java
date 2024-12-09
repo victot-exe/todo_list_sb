@@ -1,6 +1,6 @@
 package edu.victot.todo_list_sb.service;
 
-import edu.victot.todo_list_sb.dto.TaskDTO;
+import edu.victot.todo_list_sb.dto.TaskDTORequest;
 import edu.victot.todo_list_sb.model.Task;
 import edu.victot.todo_list_sb.repository.TaskRepository;
 import org.springframework.stereotype.Service;
@@ -17,14 +17,14 @@ public class TaskService {
         this.taskRepository = taskRepository;
     }
 
-    public TaskDTO createTask(TaskDTO taskDTO) {
-        //TODO COlocar a validação em outra classe
+    public TaskDTORequest createTask(TaskDTORequest taskDTO) {
+        //TODO COlocar a validação em outra classe sem ser pelo Id, usar uma combinação de dueDat title
         if(taskRepository.existsById(taskDTO.id())){
             Task task = taskRepository.findById(taskDTO.id()).get();
 
             boolean exists = taskDTO.title().equals(task.getTitle())
                     && taskDTO.description().equals(task.getDescription())
-                    && taskDTO.dueDate().equals(task.getDueDate());
+                    && taskDTO.dueDate().equals(task.getDueDate());//TODO Separar a DateTime em 2 variaveis, Uma date e outra time
             if(exists){
                 throw new IllegalArgumentException("A tarefa já existe");
             }
@@ -39,8 +39,8 @@ public class TaskService {
         return taskDTO;
     }
 
-    public List<TaskDTO> getAllTasks() {
-        List<TaskDTO> list = taskRepository.findAll().stream().map(this::conversionTaskToDTO).toList();
+    public List<TaskDTORequest> getAllTasks() {
+        List<TaskDTORequest> list = taskRepository.findAll().stream().map(this::conversionTaskToDTO).toList();
 
         if(list.isEmpty())
             throw new IllegalStateException("List is empty");
@@ -48,15 +48,15 @@ public class TaskService {
         return list;
     }
 
-    public TaskDTO getTaskById(Long id) {
+    public TaskDTORequest getTaskById(Long id) {
 
         if(taskRepository.existsById(id))
-            return taskRepository.findById(id).isPresent() ? conversionTaskToDTO(taskRepository.findById(id).get()) : null;
+            return conversionTaskToDTO(taskRepository.findById(id).get());
 
         throw new IllegalArgumentException("Task not found");
     }
 
-    public TaskDTO updateTask(TaskDTO taskDTO) {
+    public TaskDTORequest updateTask(TaskDTORequest taskDTO) {
         Long id = taskDTO.id();
 
         if(taskRepository.existsById(id)){
@@ -81,8 +81,8 @@ public class TaskService {
         taskRepository.deleteById(id);
     }
 
-    private TaskDTO conversionTaskToDTO(Task task) {
-        return new TaskDTO(
+    private TaskDTORequest conversionTaskToDTO(Task task) {
+        return new TaskDTORequest(
                 task.getId(),
                 task.getTitle(),
                 task.getDescription(),
