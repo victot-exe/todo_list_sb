@@ -18,21 +18,15 @@ public class TaskService {
     }
 
     public TaskDTORequest createTask(TaskDTORequest taskDTO) {
-        //TODO COlocar a validação em outra classe sem ser pelo Id, usar uma combinação de dueDat title
-        if(taskRepository.existsById(taskDTO.id())){
-            Task task = taskRepository.findById(taskDTO.id()).get();
 
-            boolean exists = taskDTO.title().equals(task.getTitle())
-                    && taskDTO.description().equals(task.getDescription())
-                    && taskDTO.dueDate().equals(task.getDueDate());//TODO Separar a DateTime em 2 variaveis, Uma date e outra time
-            if(exists){
-                throw new IllegalArgumentException("A tarefa já existe");
-            }
-        }
+        if(taskRepository.existsByDueDateAndDueTime(taskDTO.dueDate(), taskDTO.dueTime()))
+            throw new IllegalArgumentException("You are busy this time");
+
         Task task = new Task(
                 taskDTO.title(),
                 taskDTO.description(),
                 taskDTO.dueDate(),
+                taskDTO.dueTime(),
                 taskDTO.status()
         );
         taskRepository.save(task);
@@ -56,8 +50,7 @@ public class TaskService {
         throw new IllegalArgumentException("Task not found");
     }
 
-    public TaskDTORequest updateTask(TaskDTORequest taskDTO) {
-        Long id = taskDTO.id();
+    public TaskDTORequest updateTask(TaskDTORequest taskDTO, Long id) {
 
         if(taskRepository.existsById(id)){
             Optional<Task> result = taskRepository.findById(id);
@@ -83,11 +76,10 @@ public class TaskService {
 
     private TaskDTORequest conversionTaskToDTO(Task task) {
         return new TaskDTORequest(
-                task.getId(),
                 task.getTitle(),
                 task.getDescription(),
-                task.getCreateAt(),
                 task.getDueDate(),
+                task.getDueTime(),
                 task.getStatus());
     }
 }

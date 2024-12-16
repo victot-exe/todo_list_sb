@@ -5,6 +5,7 @@ import edu.victot.todo_list_sb.model.Task;
 import edu.victot.todo_list_sb.model.enums.Status;
 import edu.victot.todo_list_sb.repository.TaskRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,8 +49,11 @@ public class TaskServiceTest {
     }
 
     @Test
+    @DisplayName("Testando create task")
     public void deve_criar_uma_nova_task_e_retornar_a_mesma(){
         when(taskRepository.save(any(Task.class))).thenReturn(task);
+        when(taskRepository.existsByDueDateAndDueTime(LocalDate.of(2024, 12,30), LocalTime.of(12, 30)))
+        .thenReturn(false);
 
         TaskDTORequest result = taskService.createTask(taskDTO);
 
@@ -58,15 +62,17 @@ public class TaskServiceTest {
     }
 
     @Test
-    public void deve_retornar_uma_IllegalArgumentException_quando_tentar_salvar_uma_tarefa_existente(){
-        when(taskRepository.existsById(anyLong())).thenReturn(true);
-        when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
+    @DisplayName("Testanmdo a exceção quando tenta adicionar uma tarefa em uma data e hora já ocupada")
+    public void deve_retornar_uma_IllegalArgumentException_quando_tentar_salvar_uma_tarefa_em_uma_data_ocupada(){
+        when(taskRepository.existsByDueDateAndDueTime(any(), any())).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> taskService.createTask(taskDTO));
+        Exception result = assertThrows(IllegalArgumentException.class, () -> taskService.createTask(taskDTO));
+        assertEquals("You are busy this time", result.getMessage());
     }
 
     @Test
-    public void deve_retornar_uma_list_de_taskDTO(){
+    @DisplayName("Testando getAllTasks")
+    public void deve_retornar_uma_list_de_taskDTORequest(){
         when(taskRepository.findAll()).thenReturn(List.of(task, task, task));
         List<TaskDTORequest> result = taskService.getAllTasks();
 
@@ -75,14 +81,17 @@ public class TaskServiceTest {
     }
 
     @Test
+    @DisplayName("Testando o lançamento de exceção de getAllTasks")
     public void deve_retornar_uma_IllegalStateException_pois_a_lista_esta_vazia(){
 
-        assertThrows(IllegalStateException.class, () -> taskService.getAllTasks());
+        Exception result = assertThrows(IllegalStateException.class, () -> taskService.getAllTasks());
+        assertEquals("List is empty", result.getMessage());
         verify(taskRepository, times(1)).findAll();
     }
 
     @Test
-    public void deve_retornar_taskDTO(){
+    @DisplayName("Testando getTaskById")
+    public void deve_retornar_taskDTORequest(){
         when(taskRepository.existsById(anyLong())).thenReturn(true);
         when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
 
@@ -94,14 +103,17 @@ public class TaskServiceTest {
     }
 
     @Test
+    @DisplayName("Testando o lançamento de exceção de getTaskById")
     public void deve_retornar_IllegalArgumentException_id_nao_encontrado(){
         when(taskRepository.existsById(anyLong())).thenReturn(false);
 
-        assertThrows(IllegalArgumentException.class, () -> taskService.getTaskById(anyLong()));
+        Exception result = assertThrows(IllegalArgumentException.class, () -> taskService.getTaskById(anyLong()));
+        assertEquals("Task not found", result.getMessage());
         verify(taskRepository, times(0)).findById(anyLong());
     }
 
     @Test
+    @DisplayName("Testando deleteById")
     public void deve_executar_existsById_e_deleteById(){
         when(taskRepository.existsById(anyLong())).thenReturn(true);
 
@@ -111,14 +123,20 @@ public class TaskServiceTest {
     }
 
     @Test
+    @DisplayName("Testando o lançamento de exceção de deleteById")
     public void deve_executar_existsById_e_lancar_uma_IllegalArgumentException(){
         when(taskRepository.existsById(anyLong())).thenReturn(false);
-        assertThrows(IllegalArgumentException.class, () -> taskService.deleteTaskById(anyLong()));
+
+        Exception result = assertThrows(IllegalArgumentException.class, () -> taskService.deleteTaskById(anyLong()));
+
+        assertEquals("Task not found", result.getMessage());
         verify(taskRepository, times(1)).existsById(anyLong());
     }
 
     @Test
+    @DisplayName("Testando o upodateTask")
     public void deve_executar_existsById_e_save_retornar_uma_TaskDTO_atualizada(){
+
         when(taskRepository.existsById(anyLong())).thenReturn(true);
         when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
 
@@ -130,7 +148,7 @@ public class TaskServiceTest {
                 Status.CONCLUIDA
         );
 
-        TaskDTORequest autalizada = taskService.updateTask(novaTaskDTO);
+        TaskDTORequest autalizada = taskService.updateTask(novaTaskDTO, 1L);
 
         verify(taskRepository, times(1)).existsById(anyLong());
         verify(taskRepository, times(1)).findById(anyLong());
@@ -140,10 +158,12 @@ public class TaskServiceTest {
     }
 
     @Test
+    @DisplayName("Testando a exceção do updateTask")
     public void deve_executar_existsById_e_lancar_IllegalArgumentException(){
         when(taskRepository.existsById(anyLong())).thenReturn(false);
 
-        assertThrows(IllegalArgumentException.class, () -> taskService.updateTask(taskDTO));
+        Exception result = assertThrows(IllegalArgumentException.class, () -> taskService.updateTask(taskDTO, 1L));
+        assertEquals("Id not found", result.getMessage());
         verify(taskRepository, times(1)).existsById(anyLong());
     }
 
