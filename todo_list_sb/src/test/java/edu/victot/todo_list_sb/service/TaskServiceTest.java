@@ -1,9 +1,11 @@
 package edu.victot.todo_list_sb.service;
 
 import edu.victot.todo_list_sb.dto.TaskDTORequest;
+import edu.victot.todo_list_sb.dto.TaskDTOResponse;
 import edu.victot.todo_list_sb.model.Task;
 import edu.victot.todo_list_sb.model.enums.Status;
 import edu.victot.todo_list_sb.repository.TaskRepository;
+import edu.victot.todo_list_sb.service.exception.BusyTimeException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,7 +57,7 @@ public class TaskServiceTest {
         when(taskRepository.existsByDueDateAndDueTime(LocalDate.of(2024, 12,30), LocalTime.of(12, 30)))
         .thenReturn(false);
 
-        TaskDTORequest result = taskService.createTask(taskDTO);
+        TaskDTOResponse result = taskService.createTask(taskDTO);
 
         verify(taskRepository, times(1)).save(any(Task.class));
         assertNotNull(result);
@@ -66,7 +68,7 @@ public class TaskServiceTest {
     public void deve_retornar_uma_IllegalArgumentException_quando_tentar_salvar_uma_tarefa_em_uma_data_ocupada(){
         when(taskRepository.existsByDueDateAndDueTime(any(), any())).thenReturn(true);
 
-        Exception result = assertThrows(IllegalArgumentException.class, () -> taskService.createTask(taskDTO));
+        Exception result = assertThrows(BusyTimeException.class, () -> taskService.createTask(taskDTO));
         assertEquals("You are busy this time", result.getMessage());
     }
 
@@ -74,15 +76,17 @@ public class TaskServiceTest {
     @DisplayName("Testando getAllTasks")
     public void deve_retornar_uma_list_de_taskDTORequest(){
         when(taskRepository.findAll()).thenReturn(List.of(task, task, task));
-        List<TaskDTORequest> result = taskService.getAllTasks();
+        List<TaskDTOResponse> result = taskService.getAllTasks();
 
         assertNotNull(result);
-        assertInstanceOf(TaskDTORequest.class, result.getFirst());
+        assertInstanceOf(TaskDTOResponse.class, result.getFirst());
     }
 
     @Test
-    @DisplayName("Testando o lançamento de exceção de getAllTasks")
+    @DisplayName("Testando o lançamento de exceção de getAllTasks quando a lista se encontrar vazia")
     public void deve_retornar_uma_IllegalStateException_pois_a_lista_esta_vazia(){
+
+        when(taskRepository.findAll()).thenReturn(List.of());
 
         Exception result = assertThrows(IllegalStateException.class, () -> taskService.getAllTasks());
         assertEquals("List is empty", result.getMessage());
@@ -95,11 +99,11 @@ public class TaskServiceTest {
         when(taskRepository.existsById(anyLong())).thenReturn(true);
         when(taskRepository.findById(anyLong())).thenReturn(Optional.of(task));
 
-        TaskDTORequest result = taskService.getTaskById(anyLong());
+        TaskDTOResponse result = taskService.getTaskById(anyLong());
         verify(taskRepository, times(1)).existsById(anyLong());
         verify(taskRepository, times(1)).findById(anyLong());
         assertNotNull(result);
-        assertInstanceOf(TaskDTORequest.class, result);
+        assertInstanceOf(TaskDTOResponse.class, result);
     }
 
     @Test
@@ -111,6 +115,8 @@ public class TaskServiceTest {
         assertEquals("Task not found", result.getMessage());
         verify(taskRepository, times(0)).findById(anyLong());
     }
+
+    //TODO Test do get tasks by due date
 
     @Test
     @DisplayName("Testando deleteById")
@@ -134,7 +140,7 @@ public class TaskServiceTest {
     }
 
     @Test
-    @DisplayName("Testando o upodateTask")
+    @DisplayName("Testando o updateTask")
     public void deve_executar_existsById_e_save_retornar_uma_TaskDTO_atualizada(){
 
         when(taskRepository.existsById(anyLong())).thenReturn(true);
@@ -148,7 +154,7 @@ public class TaskServiceTest {
                 Status.CONCLUIDA
         );
 
-        TaskDTORequest autalizada = taskService.updateTask(novaTaskDTO, 1L);
+        TaskDTOResponse autalizada = taskService.updateTask(novaTaskDTO, 1L);
 
         verify(taskRepository, times(1)).existsById(anyLong());
         verify(taskRepository, times(1)).findById(anyLong());

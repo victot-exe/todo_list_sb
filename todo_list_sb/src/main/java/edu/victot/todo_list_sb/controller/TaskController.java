@@ -1,10 +1,12 @@
 package edu.victot.todo_list_sb.controller;
 
 import edu.victot.todo_list_sb.dto.TaskDTORequest;
+import edu.victot.todo_list_sb.dto.TaskDTOResponse;
 import edu.victot.todo_list_sb.service.TaskService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,28 +21,38 @@ public class TaskController {
     }
 
     //TODO Trocar por EntityReponse
-    @PostMapping
-    public TaskDTORequest createTask(@RequestBody TaskDTORequest taskDTO) {
-        return taskService.createTask(taskDTO);//TODO erro por usar enum, fazer em normal para ver se resolve, ou utilizar o DTO sem id
-    }
+    //TODO implementar o handler
 
     @GetMapping
-    public List<TaskDTORequest> getAllTasks() {
-        return taskService.getAllTasks();
+    public ResponseEntity<List<TaskDTOResponse>> getAllTasks() {
+        return ResponseEntity.ok(taskService.getAllTasks());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<TaskDTORequest> getTaskById(@PathVariable Long id) {
-        try{
-            return ResponseEntity.of(Optional.of(taskService.getTaskById(id)));
-        }catch(IllegalArgumentException e){
-            return ResponseEntity.notFound().build();
-        }
+    @PostMapping
+    public ResponseEntity<TaskDTOResponse> createTask(@RequestBody TaskDTORequest taskDTO) {//TODO a data está dando erroff
+        TaskDTOResponse response = taskService.createTask(taskDTO);//TODO erro por usar enum usar @Valid para limitar os numeros
+        return ResponseEntity.status(201).body(response);
     }
 
-    public List<TaskDTORequest> getTasksByDate(String date) {
-        return null;//TODO Implements
+    @GetMapping("get-by-id/{id}")
+    public ResponseEntity<TaskDTOResponse> getTaskById(@PathVariable Long id) {
+        return ResponseEntity.of(Optional.of(taskService.getTaskById(id)));
     }
 
+    @GetMapping("get-by-duedate/{dueDate}")
+    public List<TaskDTOResponse> getTasksByDate(@PathVariable LocalDate dueDate) {
+        return taskService.getTasksByDueDate(dueDate);
+    }
 
+    @DeleteMapping("delete-by-id/{id}")
+    public ResponseEntity<TaskDTOResponse> deleteTask(@PathVariable Long id) {
+        taskService.deleteTaskById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("update/{id}")
+    public ResponseEntity<TaskDTOResponse> updateTask(@PathVariable Long id, @RequestBody TaskDTORequest taskDTO) {
+        TaskDTOResponse task = taskService.updateTask(taskDTO, id);
+        return ResponseEntity.status(201).body(task);
+    }
 }
