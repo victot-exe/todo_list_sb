@@ -5,6 +5,7 @@ import edu.victot.todo_list_sb.dto.TaskDTOResponse;
 import edu.victot.todo_list_sb.model.Task;
 import edu.victot.todo_list_sb.repository.TaskRepository;
 import edu.victot.todo_list_sb.service.exception.BusyTimeException;
+import edu.victot.todo_list_sb.service.exception.NonExistentData;
 import org.springframework.stereotype.Service;
 
 
@@ -25,7 +26,7 @@ public class TaskService {
         List<TaskDTOResponse> list = taskRepository.findAll().stream().map(this::conversionTaskToDTOResponse).toList();
 
         if(list.isEmpty())
-            throw new IllegalStateException("List is empty");
+            throw new NonExistentData("List is empty");
 
         return list;
     }
@@ -52,21 +53,21 @@ public class TaskService {
         if(taskRepository.existsById(id))
             return conversionTaskToDTOResponse(taskRepository.findById(id).get());
 
-        throw new IllegalArgumentException("Task not found");
+        throw new NonExistentData("Task not found");
     }
 
-    public List<TaskDTOResponse> getTasksByDueDate(LocalDate dueDate) {
+    public List<TaskDTOResponse> getTasksByDueDate(LocalDate dueDate) {//TODO Criar testes
         List<Task> list = new ArrayList<>();
         list = taskRepository.getTaskByDueDate(dueDate);
         if(list.isEmpty())
-            throw new IllegalStateException("List is empty");//TODO colocar a exception corretab que eu mesmo vou fazer
+            throw new NonExistentData("List is empty");
 
         return list.stream().map(this::conversionTaskToDTOResponse).toList();
     }
 
     public void deleteTaskById(Long id) {
         if(!taskRepository.existsById(id)){
-            throw new IllegalArgumentException("Task not found");
+            throw new NonExistentData("Task not found");
         }
         taskRepository.deleteById(id);
     }
@@ -85,7 +86,7 @@ public class TaskService {
                 return conversionTaskToDTOResponse(atualizar);
             }
         }
-        throw new IllegalArgumentException("Id not found");
+        throw new NonExistentData("Id not found");
     }
 
     private TaskDTOResponse conversionTaskToDTOResponse(Task task) {
