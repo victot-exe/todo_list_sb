@@ -3,6 +3,7 @@ package edu.victot.todo_list_sb.controller;
 import edu.victot.todo_list_sb.dto.TaskDTORequest;
 import edu.victot.todo_list_sb.dto.TaskDTOResponse;
 import edu.victot.todo_list_sb.service.TaskService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,16 +21,13 @@ public class TaskController {
         this.taskService = taskService;
     }
 
-    //TODO Trocar por EntityReponse
-    //TODO implementar o handler
-
     @GetMapping
     public ResponseEntity<List<TaskDTOResponse>> getAllTasks() {
         return ResponseEntity.ok(taskService.getAllTasks());
     }
 
     @PostMapping
-    public ResponseEntity<TaskDTOResponse> createTask(@RequestBody TaskDTORequest taskDTO) {//TODO a data está dando erroff
+    public ResponseEntity<TaskDTOResponse> createTask(@RequestBody @Valid TaskDTORequest taskDTO) {
         TaskDTOResponse response = taskService.createTask(taskDTO);//TODO erro por usar enum usar @Valid para limitar os numeros
         return ResponseEntity.status(201).body(response);
     }

@@ -1,7 +1,7 @@
 package edu.victot.todo_list_sb.handler;
 
-import edu.victot.todo_list_sb.service.exception.BusyTimeException;
-import edu.victot.todo_list_sb.service.exception.NonExistentData;
+import edu.victot.todo_list_sb.model.exception.BusyTimeException;
+import edu.victot.todo_list_sb.model.exception.NonExistentData;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;

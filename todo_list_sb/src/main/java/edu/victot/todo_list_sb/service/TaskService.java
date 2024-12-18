@@ -4,8 +4,8 @@ import edu.victot.todo_list_sb.dto.TaskDTORequest;
 import edu.victot.todo_list_sb.dto.TaskDTOResponse;
 import edu.victot.todo_list_sb.model.Task;
 import edu.victot.todo_list_sb.repository.TaskRepository;
-import edu.victot.todo_list_sb.service.exception.BusyTimeException;
-import edu.victot.todo_list_sb.service.exception.NonExistentData;
+import edu.victot.todo_list_sb.model.exception.BusyTimeException;
+import edu.victot.todo_list_sb.model.exception.NonExistentData;
 import org.springframework.stereotype.Service;
 
 
@@ -31,7 +31,7 @@ public class TaskService {
         return list;
     }
 
-    public TaskDTOResponse createTask(TaskDTORequest taskDTO) {//TODO Trocar por responseDTO em todos os metodos
+    public TaskDTOResponse createTask(TaskDTORequest taskDTO) {
 
         if(taskRepository.existsByDueDateAndDueTime(taskDTO.dueDate(), taskDTO.dueTime()))
             throw new BusyTimeException("You are busy this time");
@@ -56,7 +56,7 @@ public class TaskService {
         throw new NonExistentData("Task not found");
     }
 
-    public List<TaskDTOResponse> getTasksByDueDate(LocalDate dueDate) {//TODO Criar testes
+    public List<TaskDTOResponse> getTasksByDueDate(LocalDate dueDate) {
         List<Task> list = new ArrayList<>();
         list = taskRepository.getTaskByDueDate(dueDate);
         if(list.isEmpty())

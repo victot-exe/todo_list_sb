@@ -5,8 +5,8 @@ import edu.victot.todo_list_sb.dto.TaskDTOResponse;
 import edu.victot.todo_list_sb.model.Task;
 import edu.victot.todo_list_sb.model.enums.Status;
 import edu.victot.todo_list_sb.repository.TaskRepository;
-import edu.victot.todo_list_sb.service.exception.BusyTimeException;
-import edu.victot.todo_list_sb.service.exception.NonExistentData;
+import edu.victot.todo_list_sb.model.exception.BusyTimeException;
+import edu.victot.todo_list_sb.model.exception.NonExistentData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -117,7 +117,28 @@ public class TaskServiceTest {
         verify(taskRepository, times(0)).findById(anyLong());
     }
 
-    //TODO Test do get tasks by due date
+    @Test
+    @DisplayName("Testando getTaskByDueDate")
+    public void deve_executar_getTaskByDueDate(){
+        when(taskRepository.getTaskByDueDate(LocalDate.of(2024, 12, 30)))
+                .thenReturn(List.of(task));
+
+        List<TaskDTOResponse> result = taskService.getTasksByDueDate(LocalDate.of(2024, 12, 30));
+        verify(taskRepository, times(1)).getTaskByDueDate(LocalDate.of(2024, 12, 30));
+        assertNotNull(result);
+        assertInstanceOf(TaskDTOResponse.class, result.getFirst());
+    }
+
+    @Test
+    @DisplayName("Testando a exceção de getTaskByDueDate")
+    public void deve_executar_getTaskByDueDate_e_retornar_uma_NonExistentData(){
+        when(taskRepository.getTaskByDueDate(LocalDate.of(2024, 12, 30)))
+                .thenReturn(List.of());
+
+        Exception result = assertThrows(NonExistentData.class, () ->taskService.getTasksByDueDate(LocalDate.of(2024, 12, 30)));
+        assertEquals("List is empty", result.getMessage());
+        verify(taskRepository, times(1)).getTaskByDueDate(LocalDate.of(2024, 12, 30));
+    }
 
     @Test
     @DisplayName("Testando deleteById")
