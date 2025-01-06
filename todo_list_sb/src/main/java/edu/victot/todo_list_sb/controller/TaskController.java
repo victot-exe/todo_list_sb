@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("task/")
+@RequestMapping("tasks")
 public class TaskController {
 
     private final TaskService taskService;
@@ -22,17 +22,17 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TaskDTOResponse>> getAllTasks() {
+     public ResponseEntity<List<TaskDTOResponse>> getAllTasks() {
         return ResponseEntity.ok(taskService.getAllTasks());
     }
 
     @PostMapping
     public ResponseEntity<TaskDTOResponse> createTask(@RequestBody @Valid TaskDTORequest taskDTO) {
-        TaskDTOResponse response = taskService.createTask(taskDTO);//TODO erro por usar enum usar @Valid para limitar os numeros
+        TaskDTOResponse response = taskService.createTask(taskDTO);
         return ResponseEntity.status(201).body(response);
     }
 
-    @GetMapping("get-by-id/{id}")
+    @GetMapping("{id}")
     public ResponseEntity<TaskDTOResponse> getTaskById(@PathVariable Long id) {
         return ResponseEntity.of(Optional.of(taskService.getTaskById(id)));
     }
@@ -42,13 +42,13 @@ public class TaskController {
         return taskService.getTasksByDueDate(dueDate);
     }
 
-    @DeleteMapping("delete-by-id/{id}")
+    @DeleteMapping("{id}")
     public ResponseEntity<TaskDTOResponse> deleteTask(@PathVariable Long id) {
         taskService.deleteTaskById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("update/{id}")
+    @PutMapping("{id}")
     public ResponseEntity<TaskDTOResponse> updateTask(@PathVariable Long id, @RequestBody TaskDTORequest taskDTO) {
         TaskDTOResponse task = taskService.updateTask(taskDTO, id);
         return ResponseEntity.status(201).body(task);

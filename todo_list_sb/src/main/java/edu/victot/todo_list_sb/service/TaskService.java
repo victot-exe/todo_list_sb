@@ -67,7 +67,7 @@ public class TaskService {
 
     public void deleteTaskById(Long id) {
         if(!taskRepository.existsById(id)){
-            throw new NonExistentData("Task not found");
+            throw new NonExistentData("Id not found");
         }
         taskRepository.deleteById(id);
     }
@@ -81,6 +81,7 @@ public class TaskService {
                 atualizar.setTitle(taskDTO.title());
                 atualizar.setDescription(taskDTO.description());
                 atualizar.setDueDate(taskDTO.dueDate());
+                atualizar.setDueTime(taskDTO.dueTime());
                 atualizar.setStatus(taskDTO.status());
                 taskRepository.save(atualizar);
                 return conversionTaskToDTOResponse(atualizar);
