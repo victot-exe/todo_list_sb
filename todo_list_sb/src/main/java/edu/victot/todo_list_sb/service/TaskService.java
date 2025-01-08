@@ -101,4 +101,8 @@ public class TaskService {
                 task.getStatus()
         );
     }
+
+    public void deleteAll() {
+        taskRepository.deleteAll();
+    }
 }

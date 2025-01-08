@@ -53,4 +53,10 @@ public class TaskController {
         TaskDTOResponse task = taskService.updateTask(taskDTO, id);
         return ResponseEntity.status(201).body(task);
     }
+
+    @DeleteMapping()
+    public ResponseEntity deleteAllTasks(){
+        taskService.deleteAll();
+        return ResponseEntity.noContent().build();
+    }
 }

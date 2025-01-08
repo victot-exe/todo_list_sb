@@ -15,15 +15,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(classes = TodoListSbApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TaskControllerTest {
-//tentando entender pq alguns testes passam quando rodo ele sozinho, mas não quando rodo bloco
+
+    private Long id;
+
     @LocalServerPort
     private int port;
 
-    @BeforeAll
-    public void beforeAll(TestInfo testInfo) {
+
+    @BeforeEach
+    public void setUp() {
         RestAssured.port = port;
-//        if(!testInfo.getDisplayName().equals("Teste de lista vazia"))
-//            return;
+
+        this.id = 0L;
+
+        given().when().delete("/tasks").then().statusCode(204);
 
         String body =
                 """
@@ -36,36 +41,36 @@ public class TaskControllerTest {
                 }
                 """;
 
-        given()
+        Response response =
+                given()
+                        .contentType(ContentType.JSON)
+                        .body(body)
+                        .when()
+                        .post("/tasks");
+        this.id = response.jsonPath().getLong("id");
+    }
+
+    @Test
+    @DisplayName("Teste de lista vazia")
+    @Order(99)
+    public void retorna_statusCode200_listIsEmpty(){
+
+        given().when().delete("/tasks").then().statusCode(204);
+
+        Response response = given()
                 .contentType(ContentType.JSON)
-                .body(body)
                 .when()
-                .post("/tasks")
-                .then()
-                .statusCode(201);
-    }
+                .get("/tasks");
+        String responseBody = response.then()
+                .statusCode(200)
+                .extract().body().asString();
 
-    @BeforeEach
-    public void setUp() {
-        RestAssured.port = port;
+        assertEquals("List is empty", responseBody);
     }
-
-//    @Test
-//    @DisplayName("Teste de lista vazia")
-//    public void retorna_statusCode200_listIsEmpty(){
-//        Response response = given()
-//                .contentType(ContentType.JSON)
-//                .when()
-//                .get("/tasks");
-//        String responseBody = response.then()
-//                .statusCode(200)
-//                .extract().body().asString();
-//
-//        assertEquals("List is empty", responseBody);
-//    }
 
     @Test
     @DisplayName("Criando uma task status code: 201")
+    @Order(2)
     public void deve_criar_uma_task_pelo_POST_e_retornar_stausCode201(){
 
         String body =
@@ -90,6 +95,7 @@ public class TaskControllerTest {
 
     @Test
     @DisplayName("Falha ao criar status code: 409 -> You are busy this time")
+    @Order(1)
     public void nao_deve_criar_um_task_e_retornar_statusCode409_falando_que_esta_ocupado(){
         String body =
                 """
@@ -119,6 +125,7 @@ public class TaskControllerTest {
 
     @Test
     @DisplayName("Lista com as tasks, status code 200")
+    @Order(3)
     public void retorna_uma_lista_com_as_tasks_statusCode200(){
         given()
                 .contentType(ContentType.JSON)
@@ -130,23 +137,26 @@ public class TaskControllerTest {
 
     @Test
     @DisplayName("Retorna task pelo id status code: 200")
-    public void retorna_uma_task_pelo_id_1_statusCode200(){
+    @Order(4)
+    public void retorna_uma_task_pelo_id_statusCode200(){
         given()
                 .contentType(ContentType.JSON)
+                .pathParam("id", this.id)
                 .when()
-                .get("/tasks/1")
+                .get("/tasks/{id}")
                 .then().statusCode(200)
-                .body("id", equalTo(1))
+                .body("id", equalTo(id.intValue()))
                 .body("title", equalTo("Title"));
     }
 
     @Test
     @DisplayName("Id não encontrado status code: 200 mas não encontra a task Task not found")
-    public void nao_retorna_uma_task_pelo_id_100_statusCode200_body_tasknotfound(){
+    @Order(5)
+    public void nao_retorna_uma_task_pelo_id_2000_statusCode200_body_tasknotfound(){
         Response response = given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/tasks/100");
+                .get("/tasks/2000");
 
         String responseBody = response.then().statusCode(200)
                 .extract().body().asString();
@@ -156,6 +166,7 @@ public class TaskControllerTest {
 
     @Test
     @DisplayName("Lista de tasks pelo dueDate status code:200")
+    @Order(6)
     public void retorna_list_of_task_pela_dueDate_statusCode200(){
 
     given()
@@ -170,6 +181,7 @@ public class TaskControllerTest {
 
     @Test
     @DisplayName("Não encontra task na data mencionada, status code: 200 -> List is empty")
+    @Order(7)
     public void nao_retorna_task_pela_dueDate_ListIsEmpty_statusCode200(){
 
         Response response = given()
@@ -185,6 +197,7 @@ public class TaskControllerTest {
 
     @Test
     @DisplayName("Update, status code: 201")
+    @Order(8)
     public void faz_o_update_status_code201(){
 
         String body =
@@ -200,11 +213,12 @@ public class TaskControllerTest {
         given()
                 .contentType(ContentType.JSON)
                 .body(body)
+                .pathParam("id", this.id)
                 .when()
-                .put("/tasks/1")
+                .put("/tasks/{id}")
                 .then()
                 .statusCode(201)
-                .body("id", equalTo(1))
+                .body("id", equalTo(id.intValue()))
                 .body("title", equalTo("Title novo"))
                 .body("description", equalTo("this is an new short description of the task"))
                 .body("dueDate", equalTo("2025-01-06"))
@@ -214,6 +228,7 @@ public class TaskControllerTest {
 
     @Test
     @DisplayName("Update de id nao encontrado, status code: 200 -> Task not found")
+    @Order(9)
     public void nao_faz_o_update_status_code200_taskNotFound() {
 
         String body =
@@ -239,15 +254,18 @@ public class TaskControllerTest {
 
     @Test
     @DisplayName("Delete bem sucedido -> status code: 204")
+    @Order(98)
     public void retorna_statusCode204_deletando_a_tarefa(){
         given()
+                .pathParam("id", this.id)
                 .when()
-                .delete("/tasks/1")
+                .delete("/tasks/{id}")
                 .then().statusCode(204);
     }
 
     @Test
     @DisplayName("Delete, id não encontrado -> status code: 200 -> Id not found")
+    @Order(100)
     public void retorna_statusCode200_taskNotFound_apos_tentar_deletar_um_id_nao_existente(){
         String responseBody = given()
                 .when()
